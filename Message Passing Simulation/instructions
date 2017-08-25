@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS 5430: A3</title>
+<link href="http://www.cs.cornell.edu/courses/cs5430/2017sp/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<xmp style="display:none;">
+# A3 Part II
+
+**Deadline:** Wednesday, 03/15/17, 11:59 pm  
+
+*This assignment may be done as individuals or with one partner.*
+
+In Part II of this assignment, you will implement some core pieces of a
+secure instant-messaging application, as well as simulate a Dolev-Yao
+attack against that application.  You do not need to submit anything
+for Part I; we assume that, as you are reading this text, you have
+successfully solved Part I.
+
+## Overview
+
+Your task is to build a collection of four programs named Alice, Bob, Mallory, and Gen:
+
+* **Alice:** repeatedly prompts the user for a string then sends that string over the
+  network to the recipient.
+* **Bob:** displays strings that are received from the sender.
+* **Mallory:** the Dolev-Yao attacker.  Mallory receives a message
+  as input from the network, displays the message, and prompts the user 
+  whether to forward the message as is, to modify the message 
+  before forwarding it, or to drop the message and not forward it.  Mallory
+  can also store and replay old messages.  The sophistication
+  of modification and replay that you implement is up to you, as
+  long as you are able to carry out the demo described below.  
+* **Gen:** generates public&ndash;private key pairs and stores them in files.
+
+## Requirements
+
+**Requirement 1: Network communication.**
+Alice, Bob, and Mallory communicate with one another over TCP. 
+The communication architecture is that Alice sends messages
+to Mallory, who sends messages to Bob:
+```
+Alice ---> Mallory ---> Bob
+```
+
+Hostnames (or network addresses) and ports must not be hardcoded.
+They could be specified as command-line arguments, or accepted
+as program inputs.
+
+The expected workflow is as follows:
+
+1. Run Gen to generate key files, which are then manually distributed
+   to the filesystems from which Alice, Bob, and Mallory will run. 
+   Alice receives her public and private keys as well as Bob's public
+   keys.  Bob receives his public and private keys as well as Alice's
+   public keys.  Mallory receives both Alice and Bob's public keys, but
+   not their private keys.
+2. Start Bob.
+3. Start Mallory, specifying Bob's address as the recipient.
+4. Start Alice, specifying Mallory's address as the recipient.
+5. Type strings into Alice, which are sent over the network to Mallory.
+   Use Mallory to read, modify, and/or delete messages.  Messages
+   sent by Mallory to Bob should be displayed by Bob. 
+   If Bob is able to detect Mallory's actions on messages, then a notification about 
+   this action should be displayed. 
+
+
+**Requirement 2: Cryptography.**
+At startup, the system should provide the ability to operate in each of 
+four configurations:
+
+1. *No cryptography:*  messages are not protected.
+2. *Symmetric encryption only:*  the confidentiality of messages is protected.
+3. *MACs only:*  the integrity of messages is protected.
+4. *Symmetric encryption then MAC:*  both the confidentiality and integrity of
+   messages is protected with Enc-then-MAC.
+   
+Once an instance of the system is started, the configuration need not be 
+changeable.  The configuration must not be hardcoded.
+It could be specified as a command-line argument, or accepted
+as a program input.
+
+Since Alice and Bob do not initially share any symmetric
+keys, you need a key establishment protocol; use the protocol provided
+in the appendix of this writeup.
+
+Every message should be accompanied by a sequence number (aka message
+number). The system should use these sequence numbers to resist replay
+attacks, though the success of that countermeasure may depend upon the
+configuration in use.
+
+The system configuration should determine how Mallory interprets and
+displays messages.  We ask that you make Mallory's display easy for
+the human grader to interpret.  More specifically:
+1. *No cryptography:*  Mallory displays the same plaintext message that Alice sent.
+   This should be the same as the string entered at Alice&mdash;not (e.g.) some 
+   human-unreadable byte array.
+2. *Symmetric encryption only:*  Mallory displays the ciphertext.
+3. *MACs only:*  Mallory displays both the plaintext message and the tag.
+4. *Symmetric encryption then MAC:*  Mallory displays both the ciphertext
+   and the tag.
+
+**Requirement 3:  Interface.**
+The sophistication of the interface you build is your choice.  We
+are perfectly happy with text-only interfaces that are configured 
+solely by command-line arguments.  
+
+**Implementation:** 
+Choose a programming language and environment with which you are
+comfortable and that has library support for the cryptographic and
+networking functionality you will need. Java, C#, and Python are
+good choices. Use library implementations of encryption schemes,
+block cipher modes, MACs, digital signatures, and hash functions.
+Do not use library implementations of higher-level protocols, such as SSL/TLS.
+
+**Underspecification:** 
+All further details are up to you. Make reasonable choices and be
+prepared to defend them. 
+
+## Rationale document
+
+Prepare a *rationale document* explaining the use of
+cryptography in your system.  The document should include protocol narrations
+to document the cryptographic protocol used in each of your four configurations.
+The document should also provide a justification for your choices of key lengths 
+and cryptographic algorithms.  
+
+## Submission
+
+If you work with a partner, first form a group on [CMS][cms]; submit as that group,
+rather than submitting the same solution independently.
+Submit your rationale document and an archive of your source code.
+
+[cms]: https://cms.csuglab.cornell.edu/
+
+## Demo
+
+You will meet with a grader to demo your system in person on your own
+computer. It is acceptable to demo on a single physical computer. We
+will schedule the demos on [CMS][cms]. The slots have not yet been
+created in CMS.  We will post a message on Piazza after they have been
+created.  Please sign up for a slot in [CMS][cms] by Wednesday,
+03/15/17, 11:59 pm.
+
+Your demo should begin with you downloading your submission (code and
+rationale document) from CMS, so that the grader is convinced you have
+not made any later improvements. 
+
+During the demo, you will be asked to
+perform the experiments below. For most of the experiments, the graders
+will be observing information displayed by Mallory and Bob to assess the
+correctness of your system. In between experiments, you will be asked to
+discuss cryptographic protocols in your rationale document, point to
+implementations of protocols in your code, and justify cryptographic and
+implementation choices.
+
+**Part 1 [20 pts]:** 
+
+* Run Gen to generate new key files.
+* Start Bob, Mallory, and Alice in "no-cryptography" configuration.
+* Send messages from Alice to Mallory to Bob.
+* Use Mallory to delete a message.
+* Use Mallory to modify a message.
+
+**Part 2 [26 pts]:** 
+
+* Start Bob, Mallory, and Alice in "Enc-only" configuration.
+* Send messages from Alice to Mallory to Bob.
+
+**Part 3 [14 pts]:** 
+
+* Start Bob, Mallory, and Alice in "Mac-only" configuration.
+* Send messages from Alice to Mallory to Bob.
+* Use Mallory to replay an old message.
+* Use Mallory to delete a message and pass the next message through.
+* Use Mallory to modify a message.
+
+**Part 4 [7 pts]:** 
+
+* Start Bob, Mallory, and Alice in "Enc-then-Mac" configuration.
+* Send messages from Alice to Mallory to Bob.
+
+We strongly recommend that you practice these experiments before your
+demo, so that you are relaxed and comfortable, hence better able to
+answer the grader's questions, and so that you are able to finish 
+your demo during the time allotted.
+
+## Evaluation
+
+You will be evaluated on the quality of your submission and demo, and on
+your adherence to the submission stipulations above. The quality of your
+source code (documentation, style, etc.) will not explicitly be
+evaluated.
+
+## Appendix: Key transport protocol
+
+The following, known as ISO/IEC 11770-3 Key Transport Mechanism 2,
+is a key transport protocol based on asymmetric cryptography. 
+It enables A to convey a fresh session key to B by sending a single message.
+
+```
+1. A -> B: B, tA, Enc(A,kAB; K_B), Sign(B, tA, Enc(A,kAB; K_B); k_A)
+```
+where
+
+* A and B are identifiers for principals, which in this assignment may simply be strings
+* tA is a timestamp sampled from A's local clock and verified by B against B's local 
+  clock to be *recent*, which in this assignment is defined as "within the last 
+  two minutes"
+* Enc is an asymmetric encryption algorithm 
+* Sign is a digital signature algorithm
+* kAB is a fresh session key generated by A
+* K_B is B's public encryption key
+* k_A is A's private signing key
+
+Furthermore, Enc must be a non-malleable encryption scheme.  *Hint: RSA with OAEP 
+padding is non-malleable.*
+
+</xmp>
+
+<script src="http://www.cs.cornell.edu/courses/cs5430/2017sp/strapdown-0.2/strapdown.js"></script>
+</body>
+
+</html>
